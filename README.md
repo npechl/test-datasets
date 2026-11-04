@@ -391,6 +391,7 @@ The earth sciences folder contain subfolders for different data formats encounte
       - sequence/chr22_23800000-23980000.fa: Fasta file containing a section of chr22
       - sequence/hg38.chr22.fasta: Fasta file containing the entire chr22
       - sequence/hg38.chr22.fasta.fai: Fasta index for `hg38.chr22.fasta`
+      - sequence/chr22_test.refFlat: refFlat gene annotation matching chr22_23800000-23980000.fa (relabeled `chr22_test` to match the dartseq pipeline's reference), copied from the dartseq branch's `bullseye.test.refFlat`. Used by the bullseye/findeditsites, bullseye/summarizesites and bullseye/quantifysites module tests.
     - chr22_chr22_KI270734v1_random: directory for reference files using chr22 and chr22_KI270734v1_random, for paraphase
       - sequence/genome.fa.gz: Gzipped fasta file from GRCh38 with bases not within chr22:18912282-18936793 and chr22_KI270734v1_random:137587-162092 hard masked to N.
     - genetic_map: directory containing genetic map of GRCh38 in various format
@@ -426,6 +427,7 @@ The earth sciences folder contain subfolders for different data formats encounte
     - genome.fasta.gz: bgzipped version of 'genome.fasta'
     - genome.fasta.gz.fai: index file for 'genome.fasta.gz'
     - genome.fasta.gz.gzi: index file for 'genome.fasta.gz'
+    - genome_extra_contig.fasta: `genome.fasta` plus a 2 kb synthetic random contig `chrExtra` that is not in the headers of the `illumina/bam/test*.paired_end.sorted.bam` files, so variant callers produce no records for it
     - genome2.fasta: Reference fasta based on chr22:16600000-16800000
     - genome3.fasta: Reference fasta based on chr19:45760000-45770300
     - genome3.fna: Reference fasta based on chr19:45760000-45770300 (copy of genome3.fasta, with different extension)
@@ -444,6 +446,7 @@ The earth sciences folder contain subfolders for different data formats encounte
     - multi_intervals.bed: Contains the interval from `interval.list` split into two parts
     - genome.intervals1_multi.bed: First interval from `multi_intervals.bed` (chr22:1-15000), used for scatter-gather testing
     - genome.intervals2_multi.bed: Second interval from `multi_intervals.bed` (chr22:20000-40001), used for scatter-gather testing
+    - genome_extra_contig.multi_intervals.bed: Intervals for `genome_extra_contig.fasta` (chr22:1-15000 and chrExtra:1-2000), used for scatter-gather testing with an interval that yields no records
     - blacklist_intervals.bed: Contains the intervals of problematic regions of the genome
     - annotated_intervals.tsv: Contains the intervals of the genome (annotated with gc-content) excluding problematic regions
     - filtered_intervals.interval_list: Contains the intervals of the genome that contain at least one read hit
@@ -554,6 +557,8 @@ The earth sciences folder contain subfolders for different data formats encounte
         - test.paired_end.duplex_umi_grouped.bam: file originating from `test.paired_end.duplex_umi_mapped_tagged.bam`
         - test.paired_end.duplex_umi_duplex_consensus.bam: file originating from `test.paired_end.duplex_umi_grouped.bam`
         - test.paired_end.umi_in_header.bam{,.bai}: Modification of `test.paired_end.unsorted_tagged.bam` to move the UMIs to the read header, and swap chromosome to entire chr22 rather than chr22:16570000-16610000. Sorted and indexed.
+      - 'control.chr22_test.bam{.bai}': STAR-aligned, sorted, indexed control-group DART-seq RNA-seq BAM against the `chr22_test` reference (genomics/homo_sapiens/genome/chr22/sequence/chr22_23800000-23980000.fa, relabeled), from the dartseq pipeline's public test FASTQs (test-datasets `dartseq` branch, sample A03). Used by the bullseye/findeditsites, bullseye/summarizesites and bullseye/quantifysites module tests.
+      - 'dart.chr22_test.bam{.bai}': STAR-aligned, sorted, indexed DART-seq-treated ("dart" group) RNA-seq BAM against the `chr22_test` reference, matching `control.chr22_test.bam` (test-datasets `dartseq` branch, sample A04). Used by the bullseye/findeditsites, bullseye/summarizesites and bullseye/quantifysites module tests.
     - bcl:
       - flowcell.tar.gz: bcl data generated on a MiSeq sequencer. Contains only data for the first tile.
       - flowcell_samplesheet.csv: SampleSheet for data on flowcell
@@ -838,11 +843,14 @@ The earth sciences folder contain subfolders for different data formats encounte
   - rnaseq:
     - test_starfusion.annotfilterrule.pm: Filtering rules for `prep_genome_lib.pl` script in starfusion
   - scrnaseq:
+    - celltypist:
+      - pbmc3k_celltypist_model.pkl: CellTypist model trained on 600 cells from `scanpy.datasets.pbmc3k_processed()` using the `louvain` cell type labels, with 1,806 features. Made with celltypist 1.7.1. Used with `pbmc3k_celltypist_query.h5ad` in the celltypist module tests.
     - csv:
       - SRR28679756_filtered_matrix.csv: SRR28679756 was processed with nf-core/scrnaseq v4.0.0 and subsetted to 100 cells and 100 genes.
     - h5ad:
       - pbmc3k.h5ad: Standard scanpy test dataset obtained using `scanpy.datasets.pbmc3k()`.
       - pbmc1k.h5ad: `pbmc3k.h5ad` subsampled to 1,000 cells and genes. `adata.obs` contains `batch`column with batches '1', '2', and '3'
+      - pbmc3k_celltypist_query.h5ad: 300 cells and 1,838 genes from `scanpy.datasets.pbmc3k_processed()`, different cells from those used to train `pbmc3k_celltypist_model.pkl`. Log1p-normalised to 10,000 counts per cell, with no cell metadata.
       - combined_filtered_matrix.h5ad: Combined filtered matrix from SRR28679756, SRR28679757, SRR28679758 and SRR28679759, generated with nf-core/scrnaseq v4.0.0, subsetted to 10k genes.
       - SRR28679756_filtered_matrix.h5ad: SRR28679756 was processed with nf-core/scrnaseq v4.0.0 and subsetted to 10k genes. Contains an additional layer `counts` and a column `symbols` in `adata.var`.
       - SRR28679756_raw_matrix.h5ad: SRR28679756 was processed with nf-core/scrnaseq v4.0.0 and subsetted to 10k genes and 300k cells.
@@ -855,6 +863,13 @@ The earth sciences folder contain subfolders for different data formats encounte
       - SRR28679757_raw_matrix.sce.rds: SRR28679757 was processed with nf-core/scrnaseq v4.0.0, subsetted to 10k genes and stored as a SingleCellExperiment RDS object.
       - SRR28679758_filtered_matrix.seurat.rds: SRR28679758 was processed with nf-core/scrnaseq v4.0.0, subsetted to 10k genes and stored as a Seurat RDS object.
       - SRR28679758_raw_matrix.seurat.rds: SRR28679758 was processed with nf-core/scrnaseq v4.0.0, subsetted to 10k genes and stored as a Seurat RDS object.
+  - vepyr:
+    - cache.tar.gz: [vepyr](https://github.com/biodatageeks/vepyr) Parquet VEP cache (Ensembl release 116, GRCh38, `ensembl` cache type) trimmed to the rows annotating `input.vcf.gz` reads; archived because the cache is a directory. Produced and verified against Ensembl VEP 116 `--everything` by `nf-core-module/stage-testdata.sh` in biodatageeks/vepyr.
+    - input.vcf.gz: 1,000 consecutive records of the GIAB HG002 GRCh38 v4.2.1 benchmark VCF (chr22:20572272-21735973), normalized with `bcftools norm -m -both`, bgzip-compressed.
+    - input.vcf.gz.tbi: tabix index of `input.vcf.gz`.
+    - reference.fa.gz: GRCh38 chromosome 22, bases 1-21745973, extracted from Ensembl `Homo_sapiens.GRCh38.dna.primary_assembly.fa` with `samtools faidx` (contig named `22`), bgzip-compressed.
+    - reference.fa.gz.fai: `samtools faidx` index of `reference.fa.gz`.
+    - reference.fa.gz.gzi: bgzip index of `reference.fa.gz`.
 
 - mus_musculus
 
@@ -891,11 +906,15 @@ The earth sciences folder contain subfolders for different data formats encounte
 
   - bacteroides_fragilis
     - genome
-      - 'genome.fna.gz': NC_006347 genome downloaded from NCBI Genome
-      - 'genome.gbff.gz': NC_006347 genome downloaded from NCBI Genomes in GenBank format
+      - 'genome.fna.gz': genome of strain FDAARGOS_1225 (chromosome NZ_CP069563.1 and plasmid NZ_CP069564.1) downloaded from NCBI Genome
+      - 'genome.gbff.gz': FDAARGOS_1225 genome downloaded from NCBI Genomes in GenBank format (a different RefSeq annotation from 'genome.gff.gz'; the protein sets differ)
       - 'genome.paf': NC_006347 genome PAF file
       - 'genome.mapping.potential.ARG': DeepARG anti-microbial resistance gene prediction of NC_006347 genome
-      - 'genome.gff.gz': NC_006347 genome downloaded from NCBI Genomes in GFF3 format
+      - 'genome.gff.gz': FDAARGOS_1225 chromosome (NZ_CP069563.1) annotation downloaded from NCBI Genomes in GFF3 format
+      - 'region_2500000-3000000.faa.gz': the 356 proteins of 'genome.gff.gz' whose CDS start between positions 2,500,000 and 3,000,000 of NZ_CP069563.1, translated from 'genome.fna.gz' with Biopython (table 11, start codon as Met), named by `protein_id`. The region holds 14 CAZyme gene clusters, 9 of them with a dbCAN-PUL substrate prediction.
+      - 'region_2500000-3000000.gff': the lines of 'genome.gff.gz' for features starting in the same region, uncompressed because run_dbcan cannot read a gzipped GFF
+      - db
+        - 'dbcan.tar.gz': mini dbCAN database (directory `dbcan_db`) for the `rundbcan` modules, cut from the full dbcan 5.2.9 database (`run_dbcan database --aws_s3`, 7.4 GB) so that `run_dbcan easy_substrate --mode protein --gff_type NCBI_prok` on the two region files above gives the same CAZymes, dbCAN-HMM, dbCAN-sub, CAZy, peptidase and TF hits, CAZyme gene clusters, PUL hits and substrate predictions as the full database. TCDB, sulfatase and STP get 1-2 extra borderline hits, since E-values are smaller against a smaller database. The HMM files hold the models in the full database's results (all `GT2_*` models within dbCAN's thresholds for `dbCAN.hmm`, and the three best-scoring `GT2_*` models per protein reported as GT2 for `dbCAN-sub.hmm`, since dbCAN reports every `GT2_*` model as GT2) or within 1000x of dbCAN's E-value threshold (`STP.hmm`, `TF.hmm`). The DIAMOND databases hold the subjects found by dbCAN's own command plus a `--more-sensitive --max-target-seqs 25` search. Each of these files also has 10 random non-matching entries. `PUL.dmnd` and `dbCAN-PUL/` hold the PULs the region's clusters hit; `dbCAN-PUL.xlsx` and `fam-substrate-mapping.tsv` are complete.
     - illumina
       - fastq
         - 'test1*{1,2}.fastq.gz': synthetic raw short-read sequencing reads of the genome of the mammalian-gut-residing Bacteroides fragilis* YCH46 bacterium (NC_006347). Originally generated for the [MAG pipeline test dataset](https://github.com/nf-core/test-datasets/tree/mag).
@@ -1125,6 +1144,32 @@ The earth sciences folder contain subfolders for different data formats encounte
   - mgnify_proteins.faa: An amino acid fasta file subset of metagenomics derived sequences predicted through the `MGnify` assemply analysis pipeline. The original superset can be found in the relevant [FTP](https://ftp.ebi.ac.uk/pub/databases/metagenomics/peptide_database/current_release/) server. The file contains 204 sequences, a size that allows family generation algorithms to execute fast, and also generate enough families to test.
   - mgnify_proteins_trimmed_clustering.tsv: Initial clustering of `mgnifams_input.faa` sequences based on MMSeqs2 `linclust` algorithm, with many singletons trimmed off for lowering file size.
 
+### metabolomics
+
+All datasets below are the example datasets bundled with the [MetaProViz](https://doi.org/10.1038/s44320-026-00231-8) R package (Schmidt et al., "Integrated metabolomics data analysis to generate mechanistic hypotheses with MetaProViz", Molecular Systems Biology, 2026), used for testing the `metaproviz/*` modules.
+
+- raw_annotation_data
+  - cellline
+    - intracell
+      - 'SE.RData': SummarizedExperiment (R-only) of intracellular metabolomics from HK2 (healthy renal epithelial cells) and 3 clear cell renal cell carcinoma (ccRCC) cell lines (786-O, 786-M1A, 786-M2A), 182 features x 58 samples, including 10 pooled QC samples. From [Metabolomics Workbench study ST002224](https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?Mode=Study&StudyID=ST002224) (project [PR001418](https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?Mode=Project&ProjectID=PR001418)), from [Sciacovelli et al. 2022, "Dynamic partitioning of branched-chain amino acids-derived nitrogen supports renal cancer progression"](https://doi.org/10.1038/s41467-022-35036-4) (Nature Communications).
+      - csv
+        - 'data_matrix.csv': feature-by-sample abundance matrix, equivalent to SE.RData's assay().
+        - 'feature_matrix.csv': feature metadata (HMDB, KEGG ID, pathway), equivalent to SE.RData's rowData().
+        - 'sample_matrix.csv': sample metadata (condition, replicate info), equivalent to SE.RData's colData().
+    - media
+      - 'SE.RData': SummarizedExperiment of extracellular (spent culture media) metabolomics from the same cell-line experiment family as `cellline/intracell` (similar LC-MS metabolite panel), 73 features x 44 samples, including 5 pooled QC samples alongside 8 other condition groups. Same [Metabolomics Workbench project PR001418](https://www.metabolomicsworkbench.org/data/DRCCMetadata.php?Mode=Project&ProjectID=PR001418) family and [Sciacovelli et al. 2022](https://doi.org/10.1038/s41467-022-35036-4) source as `cellline/intracell`.
+      - csv
+        - 'data_matrix.csv': feature-by-sample abundance matrix, equivalent to SE.RData's assay().
+        - 'feature_matrix.csv': feature metadata (HMDB, KEGG ID, pathway), equivalent to SE.RData's rowData().
+        - 'sample_matrix.csv': sample metadata (condition, replicate info), equivalent to SE.RData's colData().
+  - patient
+    - tissue
+      - 'SE.RData': SummarizedExperiment of normalized clear cell renal cell carcinoma (ccRCC) patient tissue metabolomics, tumor vs. adjacent normal tissue pairs, 570 features x 276 samples, with clinical metadata (tissue type, gender, race, stage, age). Normalized data from [Hakimi et al. 2016, "An Integrated Metabolic Atlas of Clear Cell Renal Cell Carcinoma"](https://doi.org/10.1016/j.ccell.2015.12.004) (Cancer Cell).
+      - csv
+        - 'data_matrix.csv': feature-by-sample abundance matrix, equivalent to SE.RData's assay().
+        - 'feature_matrix.csv': feature metadata (CAS, pathway, HMDB/KEGG/PubChem IDs), equivalent to SE.RData's rowData().
+        - 'sample_matrix.csv': sample metadata (tissue type, gender, race, stage, age), equivalent to SE.RData's colData().
+
 ### spatialomics
 
 - tiff
@@ -1169,6 +1214,7 @@ The earth sciences folder contain subfolders for different data formats encounte
   - 'resolvetaxonomy_plain.fasta': two sequences with plain, taxonomy-free headers, for custom/resolvetaxonomy tests.
   - 'resolvetaxonomy_embedded.fasta': two sequences with taxonomy embedded directly in the header, for custom/resolvetaxonomy tests.
   - 'resolvetaxonomy_partial.fasta': one sequence with taxonomy embedded in the header and one without, for custom/resolvetaxonomy tests.
+  - 'taxonomytree_test.fasta': six synthetic 61bp DNA sequences with real phylogenetic signal (three shared-mutation pairs), matching taxonomytree_test.tax's sequence ids, for taxonomy2phylogeny subworkflow tests.
 - fastq
   - 'rrna_reads_1.fastq.gz': Synthetic 5.8S rRNA paired-end reads (R1), 10 reads from rfam-5.8s-database-id98 for testing rRNA removal tools
   - 'rrna_reads_2.fastq.gz': Synthetic 5.8S rRNA paired-end reads (R2), matching R1 file
@@ -1195,6 +1241,19 @@ The earth sciences folder contain subfolders for different data formats encounte
   - 'ontology.obo': a mock gene ontology with 5 terms.
   - 'ontology_slim.obo': a mock GO slim with 2 terms.
   - 'go_annotation.gaf': a mock GO annotation in GAF format, containing annotations for 8 genes.
+- starsolo: Starsolo synthetic test data, taken from [here](https://raw.githubusercontent.com/cellgeni/STARsolo/main/data/test.tar.gz).
+  - 'test.fa': Synthetic reference genome
+  - 'test.gtf': Gene annotation corresponding to the synthetic reference genome, containing annotations for 3 genes.
+  - indrops
+    - 'IND1_1.fastq.gz': Synthetic inDrop read FASTQ (R1).
+    - 'IND1_2.fastq.gz': Synthetic inDrop read FASTQ (R2).
+    - 'inDrops_Ambros2_bc1.txt': First inDrop cell barcode whitelist.
+    - 'inDrops_Ambros2_bc2.txt': Second inDrop cell barcode whitelist.
+  - smartseq
+    - 'CELL01_R1.fastq.gz': Synthetic Smart-seq read FASTQ for cell 1 (R1).
+    - 'CELL01_R2.fastq.gz': Synthetic Smart-seq read FASTQ for cell 1 (R2).
+    - 'CELL02_R1.fastq.gz': Synthetic Smart-seq read FASTQ for cell 2 (R1).
+    - 'CELL02_R2.fastq.gz': Synthetic Smart-seq read FASTQ for cell 2 (R2).
 - tsv
   - 'ani.tsv': exemplary tab-seperated file describing pairwise similarities from [here](https://github.com/refresh-bio/clusty).
   - 'expression.tsv': numeric sample-by-feature matrix in TSV format, commonly used for gene abundance, expression, intensity, or other per-sample quantitative measurements
@@ -1206,6 +1265,7 @@ The earth sciences folder contain subfolders for different data formats encounte
 - tax
   - 'resolvetaxonomy_plain.tax': taxonomy strings keyed by sequence id, matching the ids in resolvetaxonomy_plain.fasta, for custom/resolvetaxonomy tests.
   - 'resolvetaxonomy_override.tax': taxonomy strings keyed by sequence id that override the taxonomy embedded in resolvetaxonomy_embedded.fasta, for custom/resolvetaxonomy tests.
+  - 'taxonomytree_test.tax': six samples' taxonomy strings -- one genus-sharing pair plus two more under the same order (Bacteria), and a resolved pair under a second kingdom (Archaea) -- deliberately not fully resolvable into a bifurcating tree, for custom/taxonomytree and taxonomy2phylogeny tests.
 - txt
   - 'hello.txt': one-line txt file
   - 'taxonomy_ids.txt': contains species names, to be used as input for [goat-cli taxon search tool](https://github.com/genomehubs/goat-cli).
