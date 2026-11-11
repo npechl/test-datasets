@@ -22,6 +22,7 @@ The genomics folder contains subfolders for all organisms for which test data is
 - actinidia_chinensis
 - arabidopsis_thaliana
 - bacteroides_fragilis
+- caenorhabditis_elegans
 - candidatus_portiera_aleyrodidarum
 - deilephila_porcellus (mitochondrion)
 - escherichia_coli
@@ -151,6 +152,12 @@ The earth sciences folder contain subfolders for different data formats encounte
     - 'proteome.fasta.gz': gzipped version of 'proteome.fasta'
     - 'proteome.hmm.gz': A HMM file from Pfam SARS-CoV-2
     - 'proteome_test.faa': The first sequence from `proteome.fasta`, duplicated eight times with minor differences, to test quality check software
+    - fairbioheaders: [FAIR-bioHeaders](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Tools) metadata for testing the `fairbioheaders` modules. The checksums are placeholders, replaced when the metadata is combined with a sequence file
+      - 'genome.fhr.yaml': FHR metadata for 'genome.fasta' (also used with 'illumina/gfa/assembly.gfa')
+      - 'genome.fhr.json': the same FHR metadata as JSON
+      - 'genome.missing_genome.fhr.yaml': invalid FHR metadata, without the required `genome` field
+      - 'proteome_test.fhp.yaml': FHP metadata for 'proteome_test.faa'
+      - 'proteome_test.unsupported_schema.fhp.yaml': FHP metadata citing a schema release (v9.9.9) that does not exist
     - graphtyper: files for testing graphtyper
       - 'regions.txt': chromosome names and positions for MT192765.1 genome
     - PRG_test: zipped directory to build a test Population Reference Graph
@@ -742,6 +749,8 @@ The earth sciences folder contain subfolders for different data formats encounte
       - mini.5p--3p.bam: subsample of hifi reads from the public pacbio dataset [pbmc singlecell mini](https://downloads.pacbcloud.com/public/dataset/IsoSeq_sandbox/2022_pbmc_singlecell_mini/ccs.bam) where the primers where removed with LIMA.
       - test.sorted.bam: 35 reads from a [public PacBio Revio dataset of HG002](https://downloads.pacbcloud.com/public/revio/2022Q4/HG002-rep1/analysis/HG002.m84011_220902_175841_s1.GRCh38.bam) aligned to GRCh38.
       - test.sorted.bam.bai: BAM index for 'test.sorted.bam'
+      - test.fail_reads.sorted.bam: 13 failed reads from a [public PacBio Revio dataset of HG002](https://human-pangenomics.s3.amazonaws.com/submissions/80d00e88-7a92-46d8-88c7-48f1486e11ed--HG002_PACBIO_REVIO/m84039_230117_233243_s1.fail_reads.default.bam) aligned to GRCh38.
+      - test.fail_reads.sorted.bam.bai: BAM index for 'test.fail_reads.sorted.bam'
       - NA03697B2_downsampled.pbmm2.repeats.bam: subsample of puretarget pacbio reads from the [public pacbio dataset](https://downloads.pacbcloud.com/public/dataset/PureTargetRE/Coriell/PBMM2-BAM-Input-For-IGV-And-TRGT/) aligned to genome3.fasta
       - NA03697B2_downsampled.pbmm2.repeats.bai: associated index to NA03697B2_downsampled.pbmm2.repeats.bam
       - NA037562_downsampled.pbmm2.repeats.bam: subsample of puretarget pacbio reads from the [public pacbio dataset](https://downloads.pacbcloud.com/public/dataset/PureTargetRE/Coriell/PBMM2-BAM-Input-For-IGV-And-TRGT/) aligned to genome3.fasta
@@ -915,6 +924,8 @@ The earth sciences folder contain subfolders for different data formats encounte
       - 'region_2500000-3000000.gff': the lines of 'genome.gff.gz' for features starting in the same region, uncompressed because run_dbcan cannot read a gzipped GFF
       - db
         - 'dbcan.tar.gz': mini dbCAN database (directory `dbcan_db`) for the `rundbcan` modules, cut from the full dbcan 5.2.9 database (`run_dbcan database --aws_s3`, 7.4 GB) so that `run_dbcan easy_substrate --mode protein --gff_type NCBI_prok` on the two region files above gives the same CAZymes, dbCAN-HMM, dbCAN-sub, CAZy, peptidase and TF hits, CAZyme gene clusters, PUL hits and substrate predictions as the full database. TCDB, sulfatase and STP get 1-2 extra borderline hits, since E-values are smaller against a smaller database. The HMM files hold the models in the full database's results (all `GT2_*` models within dbCAN's thresholds for `dbCAN.hmm`, and the three best-scoring `GT2_*` models per protein reported as GT2 for `dbCAN-sub.hmm`, since dbCAN reports every `GT2_*` model as GT2) or within 1000x of dbCAN's E-value threshold (`STP.hmm`, `TF.hmm`). The DIAMOND databases hold the subjects found by dbCAN's own command plus a `--more-sensitive --max-target-seqs 25` search. Each of these files also has 10 random non-matching entries. `PUL.dmnd` and `dbCAN-PUL/` hold the PULs the region's clusters hit; `dbCAN-PUL.xlsx` and `fam-substrate-mapping.tsv` are complete.
+    - hamronization
+      - 'data_resfinder.json': ResFinder 4.6.0 JSON output for '../genome/genome.fna.gz' (`python -m resfinder -ifa genome.fna -s Other --acquired -j data_resfinder.json`, with resfinder_db cloned on 2026-11-04). Detects cepA and tet(Q). Used by the `hamronization/resfinder` module.
     - illumina
       - fastq
         - 'test1*{1,2}.fastq.gz': synthetic raw short-read sequencing reads of the genome of the mammalian-gut-residing Bacteroides fragilis* YCH46 bacterium (NC_006347). Originally generated for the [MAG pipeline test dataset](https://github.com/nf-core/test-datasets/tree/mag).
@@ -938,7 +949,8 @@ The earth sciences folder contain subfolders for different data formats encounte
         - 'test.fastq.gz' synthetic raw long-read sequencing reads of the genome of the mammalian-gut-residing _Bacteroides fragilis_ YCH46 bacterium (NC_006347). Originally generated for the [MAG pipeline test dataset](https://github.com/nf-core/test-datasets/tree/mag).
   - candidatus_portiera_aleyrodidarum
     - genome
-      - ???
+      - fairbioheaders
+        - 'test1.fhgff3.yaml': [FAIR-bioHeaders](https://github.com/FAIR-bioHeaders/FAIR-bioHeaders-Tools) FHGFF3 metadata for 'gff/test1.gff', for testing the `fairbioheaders` modules. The top-level checksum is a placeholder, replaced when the metadata is combined with the GFF3; the `derivedFrom` checksum is a well-formed example value standing in for the FHR checksum of a parent genome file (no headed genome file is included)
     - illumina
       - ???
     - nanopore
@@ -1004,6 +1016,16 @@ The earth sciences folder contain subfolders for different data formats encounte
       - 'ilDeiPorc1.HiFi.reads.fa': test dataset for reads for Deilephila porcellus
       - 'MW539688.1.fasta': sequence of the mitochondrial reference genome for Deilephila porcellus
       - 'MW539688.1.gb': gene annotation for the mitochondrial reference genome for Deilephila porcellus
+  - caenorhabditis_elegans
+    - genome
+      - 'c_elegans_X1-58063.fa': test data reference for caenorhabditis elegans
+      - 'c_elegans_X1-58063.fa.fai': FASTA index for 'c_elegans_X1-58063.fa'
+      - 'c_elegans_X1-58063.gff3': GFF3 gene models for X:1-58,063, subset from Ensembl Metazoa release 63
+    - illumina/vcf
+      - 'c_elegans_caendr_X.vcf.gz': test vcf for caenorhabditis_elegans.
+      - 'c_elegans_caendr_X.vcf.gz.tbi': tabix index for 'c_elegans_caendr_X.vcf.gz'
+    - sa
+      - 'worm.osa2': fastVEP supplementary annotation database built from the CaeNDR variant VCF with `fastvep sa-build --source custom_vcf`
   - arabidopsis_thaliana
     - genome
       - 'ont_Col-0_tets_data_Chr1_5mb_7mb.bam': basecalled, unaligned ONT reads from Chromosome 1:5mb-7mb region for Arabidopsis thaliana.
@@ -1193,6 +1215,10 @@ All datasets below are the example datasets bundled with the [MetaProViz](https:
     - transcripts.parquet - parquet file containing the transcript coordinates
     - xenium.toml - config used to run the baysor module with the transcript above
     - spatial_gene_expression.csv - Cropped csv file from a Xenium homo sapiens breast cancer dataset.
+- insitugame
+  - 'insitugame.tsv': Small deterministic spatial marker table for the nf-core `insitugame` module.
+  - 'insitugame.tsv.gz': Gzip-compressed version of the same table for compressed-input tests.
+  - 'insitugame.csv': Comma-separated version of the same table for CSV input tests.
 
 ### generic
 
